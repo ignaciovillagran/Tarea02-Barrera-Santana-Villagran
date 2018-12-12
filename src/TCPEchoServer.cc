@@ -25,7 +25,7 @@
 
 const uint32_t RCVBUFSIZE = 32;    // Size of receive buffer
 using json = nlohmann::json;
-
+std::string nombrefinal;
 
 void HandleTCPClient(TCPSocket *sock);
 std::string buscar(std::string linea);
@@ -64,11 +64,13 @@ int main(int argc, char *argv[]) {
 	return EXIT_SUCCESS;
 }
 
+
 // TCP client handling function
 void HandleTCPClient(TCPSocket *sock) {
 
-	//std::string echoB;
+	std::string echoB;
 	uint32_t cont = 0;
+	const char *cstr;
 
 	std::cout << "Handling client ";
 	try {
@@ -85,28 +87,43 @@ void HandleTCPClient(TCPSocket *sock) {
 
 	// Send received string and receive again until the end of transmission
 	char echoBuffer[RCVBUFSIZE];
+	//char echoBuff[RCVBUFSIZE];
 	uint32_t recvMsgSize;
 	while ((recvMsgSize = sock->recv(echoBuffer, RCVBUFSIZE)) > 0) { // Zero means
 	                                                 // end of transmission
-		if(cont == 0){
-			printf("%s\n", echoBuffer);
-			std::cout << "  >>" <<buscar(echoBuffer);
+		if(cont == 0) {
+			echoB = buscar(echoBuffer);
+			cstr = echoB.c_str();
+			sock->send(cstr, 1024);
 		}
 		// Echo message back to client
-		sock->send(echoBuffer, recvMsgSize);
+		//sock->send(echoBuffer, recvMsgSize);
 		cont += 1;
 	}
 	delete sock;
 }
 
+
 std::string buscar(std::string linea) {
-	std::string nombre = "";
-	nombre = linea.substr(4, linea.find(" HTTP"));
-	std::ofstream fs("www-data"+nombre);
-	if(fs.good() != false) {
-		printf("El archivo existe..\n");
+	
+	std::string content = "",nombre = "",line;
+	nombre = linea.substr(0, linea.find(" HTTP/1.1"));
+	nombre = nombre.erase(0,4);
+	if(nombre == "/favicon.ico"){
+		nombrefinal = nombrefinal;
 	}else{
+		nombrefinal = nombre;
+	}
+
+	std::ifstream fs("www-data"+nombrefinal);
+	if(fs.good() != false) {
+		while(getline(fs,line)) {
+			content += line+"\n";
+		}
+	}else {
+		std::cout << nombrefinal;
 		printf("no existe\n");
 	}
-	return nombre;
+	fs.close();
+	return content;
 }
