@@ -1,0 +1,6 @@
+{
+		"ip" : "localhost",
+		"puerto" : 1234,
+		"root_dir" : "/home/usr/Desktop/tarea2/www-data",
+		"notFoundFile" : "/home/usr/Desktop/tarea2/www-error"
+}
