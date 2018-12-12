@@ -26,8 +26,50 @@
 const uint32_t RCVBUFSIZE = 32;    // Size of receive buffer
 using json = nlohmann::json;
 
+
+void HandleTCPClient(TCPSocket *sock);
+std::string buscar(std::string linea);
+
+int main(int argc, char *argv[]) {
+	
+	uint16_t echoServPort;   
+
+	// read a JSON file
+	std::ifstream i("bin/config.json");
+	json j;
+	j = json::parse(i);
+	std::string ip = j["ip"];
+	echoServPort = j["puerto"];
+	std::string root_dir = j["root_dir"];
+	std::string notFoundFile = j["notFoundFile"];
+	
+	printf("Ubicacion a usar:\n");
+	std::cout << ip;
+	printf(":");
+	std::cout << echoServPort;
+	printf("\n");
+
+	try {
+		TCPServerSocket servSock(ip,echoServPort);     // Server Socket object
+
+		for (;;) {   // Run forever
+			HandleTCPClient(servSock.accept());       // Wait for a client to connect
+		}
+	} catch (SocketException &e) {
+		std::cerr << e.what() << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	// NOT REACHED
+
+	return EXIT_SUCCESS;
+}
+
 // TCP client handling function
 void HandleTCPClient(TCPSocket *sock) {
+
+	//std::string echoB;
+	uint32_t cont = 0;
+
 	std::cout << "Handling client ";
 	try {
 		std::cout << sock->getForeignAddress() << ":";
@@ -46,42 +88,20 @@ void HandleTCPClient(TCPSocket *sock) {
 	uint32_t recvMsgSize;
 	while ((recvMsgSize = sock->recv(echoBuffer, RCVBUFSIZE)) > 0) { // Zero means
 	                                                 // end of transmission
+		if(cont == 0){
+			printf("%s\n", echoBuffer);
+			std::cout << "  >>" <<buscar(echoBuffer);
+		}
 		// Echo message back to client
 		sock->send(echoBuffer, recvMsgSize);
+		cont += 1;
 	}
-	printf("%s",echoBuffer );
 	delete sock;
 }
 
-int main(int argc, char *argv[]) {
+std::string buscar(std::string linea) {
 	
-	uint16_t echoServPort;   
-
-	// read a JSON file
-	std::ifstream i("bin/config.json");
-	json j;
-	j = json::parse(i);
-	std::string ip = j["ip"];
-	echoServPort = j["puerto"];
-	std::string root_dir = j["root_dir"];
-	std::string notFoundFile = j["notFoundFile"];
-	printf("Ubicacion a usar:\n");
-	std::cout << ip;
-	printf(":");
-	std::cout << echoServPort;
-	printf("\n");
-
-	try {
-		TCPServerSocket servSock(echoServPort);     // Server Socket object
-
-		for (;;) {   // Run forever
-			HandleTCPClient(servSock.accept());       // Wait for a client to connect
-		}
-	} catch (SocketException &e) {
-		std::cerr << e.what() << std::endl;
-		exit(EXIT_FAILURE);
-	}
-	// NOT REACHED
-
-	return EXIT_SUCCESS;
+	std::string nombre = "";
+	nombre = linea.substr(4, linea.find(" HTTP"));
+	return nombre;
 }
