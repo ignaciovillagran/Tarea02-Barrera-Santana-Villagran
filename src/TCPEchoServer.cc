@@ -100,8 +100,13 @@ void HandleTCPClient(TCPSocket *sock) {
 }
 
 std::string buscar(std::string linea) {
-	
 	std::string nombre = "";
 	nombre = linea.substr(4, linea.find(" HTTP"));
+	std::ofstream fs("www-data"+nombre);
+	if(fs.good() != false) {
+		printf("El archivo existe..\n");
+	}else{
+		printf("no existe\n");
+	}
 	return nombre;
 }
