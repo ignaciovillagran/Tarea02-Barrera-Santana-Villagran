@@ -26,6 +26,7 @@
 const uint32_t RCVBUFSIZE = 32;    // Size of receive buffer
 using json = nlohmann::json;
 std::string nombrefinal;
+uint8_t cont = 0;
 
 void HandleTCPClient(TCPSocket *sock);
 std::string buscar(std::string linea);
@@ -94,10 +95,11 @@ void HandleTCPClient(TCPSocket *sock) {
 		if(cont == 0) {
 			echoB = buscar(echoBuffer);
 			cstr = echoB.c_str();
-			sock->send(cstr, 1024);
+			sock->send(cstr, 2056);
 		}
 		// Echo message back to client
 		//sock->send(echoBuffer, recvMsgSize);
+		printf("%iajaksdjaksjdkajskjdkajsdkas\n",cont);
 		cont += 1;
 	}
 	delete sock;
@@ -107,23 +109,35 @@ void HandleTCPClient(TCPSocket *sock) {
 std::string buscar(std::string linea) {
 	
 	std::string content = "",nombre = "",line;
+	std::string respuesta1 = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n";
 	nombre = linea.substr(0, linea.find(" HTTP/1.1"));
 	nombre = nombre.erase(0,4);
-	if(nombre == "/favicon.ico"){
+
+	std::cout << nombre+"\n";
+
+	if(nombre == nombrefinal){
 		nombrefinal = nombrefinal;
 	}else{
 		nombrefinal = nombre;
 	}
 
+	std::ifstream fs2("www-error/404.html");
 	std::ifstream fs("www-data"+nombrefinal);
 	if(fs.good() != false) {
+		printf(">>>>existe\n");
+		std::cout << nombrefinal << " ....?\n";
 		while(getline(fs,line)) {
 			content += line+"\n";
 		}
 	}else {
-		std::cout << nombrefinal;
-		printf("no existe\n");
+		std::cout << nombrefinal+" no existe\n";
+		while(getline(fs2,line)) {
+			printf("algosssssssssssssss\n");
+			content += line+"\n";
+		}
+		return "HTTP/1.1 404 Not Found\r\nContent-Type: text/html\r\nConnection: close\r\n"+content;
 	}
 	fs.close();
-	return content;
+	fs2.close();
+	return respuesta1+content;
 }
