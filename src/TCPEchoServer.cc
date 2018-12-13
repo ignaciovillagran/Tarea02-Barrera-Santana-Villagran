@@ -25,7 +25,7 @@
 
 const uint32_t RCVBUFSIZE = 32;    // Size of receive buffer
 using json = nlohmann::json;
-std::string nombrefinal;
+
 uint8_t cont = 0;
 
 void HandleTCPClient(TCPSocket *sock);
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
 // TCP client handling function
 void HandleTCPClient(TCPSocket *sock) {
 
-	std::string echoB;
+	std::string echoB= "";
 	uint32_t cont = 0;
 	const char *cstr;
 
@@ -95,11 +95,11 @@ void HandleTCPClient(TCPSocket *sock) {
 		if(cont == 0) {
 			echoB = buscar(echoBuffer);
 			cstr = echoB.c_str();
-			sock->send(cstr, 2056);
+			sock->send(cstr, 4096);
 		}
 		// Echo message back to client
 		//sock->send(echoBuffer, recvMsgSize);
-		printf("%iajaksdjaksjdkajskjdkajsdkas\n",cont);
+		
 		cont += 1;
 	}
 	delete sock;
@@ -107,9 +107,9 @@ void HandleTCPClient(TCPSocket *sock) {
 
 
 std::string buscar(std::string linea) {
-	
-	std::string content = "",nombre = "",line;
-	std::string respuesta1 = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n";
+	std::string nombrefinal="";
+	std::string content = "",nombre = "",line="";
+	//std::string respuesta1 = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n";
 	nombre = linea.substr(0, linea.find(" HTTP/1.1"));
 	nombre = nombre.erase(0,4);
 
@@ -129,15 +129,18 @@ std::string buscar(std::string linea) {
 		while(getline(fs,line)) {
 			content += line+"\n";
 		}
+		fs.close();
+		
+		return "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n"+content;
 	}else {
 		std::cout << nombrefinal+" no existe\n";
 		while(getline(fs2,line)) {
-			printf("algosssssssssssssss\n");
+			
 			content += line+"\n";
 		}
-		return "HTTP/1.1 404 Not Found\r\nContent-Type: text/html\r\nConnection: close\r\n"+content;
+		fs2.close();
+		return "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n"+content;
+
 	}
-	fs.close();
-	fs2.close();
-	return respuesta1+content;
+	
 }
