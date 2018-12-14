@@ -25,8 +25,9 @@
 
 const uint32_t RCVBUFSIZE = 32;    // Size of receive buffer
 using json = nlohmann::json;
-
-uint8_t cont = 0;
+std::string nombrefinal;
+std::string root_dir;
+std::string notFoundFile;
 
 void HandleTCPClient(TCPSocket *sock);
 std::string buscar(std::string linea);
@@ -41,8 +42,8 @@ int main(int argc, char *argv[]) {
 	j = json::parse(i);
 	std::string ip = j["ip"];
 	echoServPort = j["puerto"];
-	std::string root_dir = j["root_dir"];
-	std::string notFoundFile = j["notFoundFile"];
+	root_dir = j["root_dir"];
+	notFoundFile = j["notFoundFile"];
 	
 	printf("Ubicacion a usar:\n");
 	std::cout << ip;
@@ -68,10 +69,8 @@ int main(int argc, char *argv[]) {
 
 // TCP client handling function
 void HandleTCPClient(TCPSocket *sock) {
-
-	std::string echoB= "";
+	std::string echoB;
 	uint32_t cont = 0;
-	
 
 	std::cout << "Handling client ";
 	try {
@@ -93,23 +92,20 @@ void HandleTCPClient(TCPSocket *sock) {
 	while ((recvMsgSize = sock->recv(echoBuffer, RCVBUFSIZE)) >= RCVBUFSIZE) { // Zero means
 	                                                 // end of transmission
 		if(cont == 0) {
-			echoB = buscar(echoBuffer);				
-			std::cout << echoB.c_str();
+			echoB = buscar(echoBuffer);
+			std::cout << echoB;
 			sock->send(echoB.c_str(), echoB.size());
 		}
-		// Echo message back to client
-		//sock->send(echoBuffer, recvMsgSize);
-		
 		cont += 1;
 	}
+	printf("\n");
 	delete sock;
 }
 
 
 std::string buscar(std::string linea) {
-	std::string nombrefinal="";
-	std::string content = "",nombre = "",line="";
-	//std::string respuesta1 = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n";
+	
+	std::string content = "",nombre = "",line = "",error = "";
 	nombre = linea.substr(0, linea.find(" HTTP/1.1"));
 	nombre = nombre.erase(0,4);
 
@@ -121,8 +117,10 @@ std::string buscar(std::string linea) {
 		nombrefinal = nombre;
 	}
 
-	std::ifstream fs2("www-error/Error404.html");
-	std::ifstream fs("www-data"+nombrefinal);
+	std::cout << root_dir;
+
+	std::ifstream fs2(notFoundFile+"/404.html");
+	std::ifstream fs(root_dir+nombrefinal);
 	if(fs.good() != false) {
 		printf(">>>>existe\n");
 		std::cout << nombrefinal << " ....?\n";
@@ -130,19 +128,14 @@ std::string buscar(std::string linea) {
 			content += line+"\n";
 		}
 		fs.close();
-		
-		return "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n"+content;
+		return "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n"+content+"\n";
 	}else {
-
 		std::cout << nombrefinal+" no existe\n";
 		while(getline(fs2,line)) {
-			
-			content += line+"\n";
+			error += line+"\n";
 		}
-		
 		fs2.close();
-		return "HTTP/1.1 404\r\nContent-Type: text/html\r\nConnection: Keep-Alive\r\n";
-		//return "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n"+content;
+		return "HTTP/1.1 404 Not Found\r\nContent-Length: 270\r\nContent-Type: text/html; charset=iso-8859-1\r\n\r\n"+error;
 	}
 	
 }

@@ -1,6 +1,6 @@
 {
-		"ip" : "127.0.0.1",
+		"ip" : "localhost",
 		"puerto" : 5034,
-		"root_dir" : "/home/usr/Desktop/tarea/www-data",
-		"notFoundFile" : "/home/usr/Desktop/tarea/www-error"
+		"root_dir" : "www-data",
+		"notFoundFile" : "www-error"
 }
