@@ -71,7 +71,7 @@ void HandleTCPClient(TCPSocket *sock) {
 
 	std::string echoB= "";
 	uint32_t cont = 0;
-	const char *cstr;
+	
 
 	std::cout << "Handling client ";
 	try {
@@ -90,12 +90,12 @@ void HandleTCPClient(TCPSocket *sock) {
 	char echoBuffer[RCVBUFSIZE];
 	//char echoBuff[RCVBUFSIZE];
 	uint32_t recvMsgSize;
-	while ((recvMsgSize = sock->recv(echoBuffer, RCVBUFSIZE)) > 0) { // Zero means
+	while ((recvMsgSize = sock->recv(echoBuffer, RCVBUFSIZE)) >= RCVBUFSIZE) { // Zero means
 	                                                 // end of transmission
 		if(cont == 0) {
-			echoB = buscar(echoBuffer);
-			cstr = echoB.c_str();
-			sock->send(cstr, 4096);
+			echoB = buscar(echoBuffer);				
+			std::cout << echoB.c_str();
+			sock->send(echoB.c_str(), echoB.size());
 		}
 		// Echo message back to client
 		//sock->send(echoBuffer, recvMsgSize);
@@ -115,13 +115,13 @@ std::string buscar(std::string linea) {
 
 	std::cout << nombre+"\n";
 
-	if(nombre == nombrefinal){
+	if(nombre == "/favicon.ico"){
 		nombrefinal = nombrefinal;
 	}else{
 		nombrefinal = nombre;
 	}
 
-	std::ifstream fs2("www-error/404.html");
+	std::ifstream fs2("www-error/Error404.html");
 	std::ifstream fs("www-data"+nombrefinal);
 	if(fs.good() != false) {
 		printf(">>>>existe\n");
@@ -133,14 +133,16 @@ std::string buscar(std::string linea) {
 		
 		return "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n"+content;
 	}else {
+
 		std::cout << nombrefinal+" no existe\n";
 		while(getline(fs2,line)) {
 			
 			content += line+"\n";
 		}
+		
 		fs2.close();
-		return "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\n"+content;
-
+		return "HTTP/1.1 404\r\nContent-Type: text/html\r\nConnection: Keep-Alive\r\n";
+		//return "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n"+content;
 	}
 	
 }
